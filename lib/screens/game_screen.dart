@@ -1,0 +1,242 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import '../models/board.dart';
+import '../logic/game_logic.dart';
+import '../logic/ai.dart';
+
+class GameScreen extends StatefulWidget {
+  final String difficulty;
+  const GameScreen({super.key, required this.difficulty});
+
+  @override
+  State<GameScreen> createState() => _GameScreenState();
+}
+
+class _GameScreenState extends State<GameScreen> {
+  late Board board;
+  late AI ai;
+
+  int currentPlayer = 1; // 1 = Player (Red), 2 = AI (Yellow)
+  String status = "Your Turn";
+  bool isGameOver = false;
+  String winner = "";
+  List<Map<String, int>> moveHistory = []; // For Undo
+
+  @override
+  void initState() {
+    super.initState();
+    board = Board();
+    ai = AI(widget.difficulty);
+  }
+
+  // Player makes a move
+  void makeMove(int col) async {
+    if (isGameOver || currentPlayer != 1) return;
+
+    int row = board.dropPiece(col, 1);
+    if (row == -1) return; // Invalid move
+
+    moveHistory.add({"player": 1, "col": col, "row": row});
+
+    setState(() {});
+
+    if (_checkGameOver(1)) return;
+
+    // AI's turn
+    setState(() {
+      currentPlayer = 2;
+      status = "AI Thinking...";
+    });
+
+    await Future.delayed(const Duration(milliseconds: 700));
+
+    await _makeAIMove();
+  }
+
+  Future<void> _makeAIMove() async {
+    int col = ai.getBestMove(board); // ← Using AI class now
+
+    int row = board.dropPiece(col, 2);
+    if (row != -1) {
+      moveHistory.add({"player": 2, "col": col, "row": row});
+    }
+
+    setState(() {});
+
+    if (_checkGameOver(2)) return;
+
+    // Back to player's turn
+    setState(() {
+      currentPlayer = 1;
+      status = "Your Turn";
+    });
+  }
+
+  bool _checkGameOver(int player) {
+    if (checkWin(board, player)) {
+      setState(() {
+        isGameOver = true;
+        winner = player == 1 ? "You Win! 🎉" : "AI Wins 😔";
+        status = winner;
+      });
+      return true;
+    }
+
+    if (isDraw(board)) {
+      setState(() {
+        isGameOver = true;
+        winner = "It's a Draw!";
+        status = winner;
+      });
+      return true;
+    }
+    return false;
+  }
+
+  void undoMove() {
+    if (moveHistory.length < 2 || isGameOver) return;
+
+    // Remove AI's last move
+    var lastAIMove = moveHistory.removeLast();
+    board.grid[lastAIMove["row"]!][lastAIMove["col"]!] = 0;
+
+    // Remove Player's last move
+    var lastPlayerMove = moveHistory.removeLast();
+    board.grid[lastPlayerMove["row"]!][lastPlayerMove["col"]!] = 0;
+
+    setState(() {
+      currentPlayer = 1;
+      status = "Your Turn";
+    });
+  }
+
+  void resetGame() {
+    setState(() {
+      board = Board();
+      currentPlayer = 1;
+      status = "Your Turn";
+      isGameOver = false;
+      winner = "";
+      moveHistory.clear();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Connect 4 - ${widget.difficulty}"),
+        backgroundColor: const Color(0xFF1E3A8A),
+        actions: [
+          IconButton(icon: const Icon(Icons.undo), onPressed: undoMove),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: resetGame),
+        ],
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF1E3A8A), Color(0xFF60A5FA)],
+          ),
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                status,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+
+            // Game Board
+            Expanded(
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[900],
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black38,
+                        blurRadius: 15,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(Board.rows, (row) {
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(Board.cols, (col) {
+                          return GestureDetector(
+                            onTap: () => makeMove(col),
+                            child: Container(
+                              width: 52,
+                              height: 52,
+                              margin: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.blue[700]!,
+                                  width: 4,
+                                ),
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: _getPieceColor(board.grid[row][col]),
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      );
+                    }),
+                  ),
+                ),
+              ),
+            ),
+
+            // Column Indicators
+            Padding(
+              padding: const EdgeInsets.only(bottom: 30),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(7, (col) {
+                  return GestureDetector(
+                    onTap: () => makeMove(col),
+                    child: Container(
+                      width: 60,
+                      height: 35,
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.white70,
+                        size: 42,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getPieceColor(int value) {
+    if (value == 1) return Colors.red[600]!;
+    if (value == 2) return Colors.yellow[600]!;
+    return Colors.transparent;
+  }
+}
