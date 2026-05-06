@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/board.dart';
 import '../logic/game_logic.dart';
+import '../services/hotseat_manager.dart';
 
+// modifies
 class HotSeatScreen extends StatefulWidget {
   const HotSeatScreen({super.key});
 
@@ -12,7 +14,7 @@ class HotSeatScreen extends StatefulWidget {
 class _HotSeatScreenState extends State<HotSeatScreen>
     with TickerProviderStateMixin {
   late Board board;
-  int currentPlayer = 1; // 1 = Red (Player 1), 2 = Yellow (Player 2)
+  int currentPlayer = 1;
   String status = "Player 1 (Red) Turn";
   bool isGameOver = false;
   String winner = "";
@@ -34,6 +36,7 @@ class _HotSeatScreenState extends State<HotSeatScreen>
   void initState() {
     super.initState();
     board = Board();
+    HotSeatManager.init();
 
     _dropController = AnimationController(
       duration: const Duration(milliseconds: 420),
@@ -54,11 +57,10 @@ class _HotSeatScreenState extends State<HotSeatScreen>
 
   void makeMove(int col) async {
     if (isGameOver) return;
-    // Block input during animation
     if (_droppingCol != null) return;
 
     int row = board.dropPiece(col, currentPlayer);
-    if (row == -1) return; // Column full
+    if (row == -1) return;
 
     int movingPlayer = currentPlayer;
 
@@ -69,7 +71,6 @@ class _HotSeatScreenState extends State<HotSeatScreen>
 
     if (_checkGameOver(movingPlayer)) return;
 
-    // Switch player
     currentPlayer = currentPlayer == 1 ? 2 : 1;
     setState(() {
       status =
@@ -95,6 +96,8 @@ class _HotSeatScreenState extends State<HotSeatScreen>
 
   bool _checkGameOver(int player) {
     if (checkWin(board, player)) {
+      final result = player == 1 ? "p1" : "p2";
+      HotSeatManager.updateScore(result);
       setState(() {
         isGameOver = true;
         winner = player == 1
@@ -102,18 +105,121 @@ class _HotSeatScreenState extends State<HotSeatScreen>
             : "Player 2 (Yellow) Wins! 🎉";
         status = winner;
       });
+      _showGameOverDialog(result);
       return true;
     }
 
     if (isDraw(board)) {
+      HotSeatManager.updateScore("draw");
       setState(() {
         isGameOver = true;
         winner = "It's a Draw!";
         status = winner;
       });
+      _showGameOverDialog("draw");
       return true;
     }
     return false;
+  }
+
+  void _showGameOverDialog(String result) {
+    String title;
+    Color titleColor;
+    IconData titleIcon;
+
+    if (result == "p1") {
+      title = "🔴 PLAYER 1 WINS!";
+      titleColor = Colors.red[300]!;
+      titleIcon = Icons.celebration;
+    } else if (result == "p2") {
+      title = "🟡 PLAYER 2 WINS!";
+      titleColor = Colors.yellow[300]!;
+      titleIcon = Icons.celebration;
+    } else {
+      title = "🤝 IT'S A DRAW!";
+      titleColor = Colors.white70;
+      titleIcon = Icons.handshake;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E3A8A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: const EdgeInsets.fromLTRB(24, 30, 24, 10),
+        contentPadding: const EdgeInsets.fromLTRB(24, 10, 24, 30),
+        title: Column(
+          children: [
+            // Back to menu button
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+                icon:
+                    const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                label: const Text(
+                  "MENU",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+            ),
+            Icon(titleIcon, size: 60, color: titleColor),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              HotSeatManager.getStats(),
+              style: const TextStyle(
+                fontSize: 20,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Total Games: ${HotSeatManager.totalGames}",
+              style: const TextStyle(fontSize: 18, color: Colors.white70),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  resetGame();
+                },
+                icon: const Icon(Icons.replay, color: Colors.white, size: 28),
+                label: const Text(
+                  "PLAY AGAIN",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   void resetGame() {
@@ -160,7 +266,7 @@ class _HotSeatScreenState extends State<HotSeatScreen>
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: resetGame,
-            color: const Color(0xFFFFFFFF), // Direct color property
+            color: const Color(0xFFFFFFFF),
           ),
         ],
       ),
@@ -179,13 +285,25 @@ class _HotSeatScreenState extends State<HotSeatScreen>
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  status,
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                child: Column(
+                  children: [
+                    Text(
+                      status,
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      HotSeatManager.getStats(),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
