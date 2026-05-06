@@ -27,7 +27,7 @@ class ScoreStorage {
     };
   }
 
-  // Clear all data (useful for testing)
+  // Clear all data
   static Future<void> clearScores() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_winsKey);
