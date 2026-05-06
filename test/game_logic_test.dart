@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/models/board.dart'; 
+import '../lib/models/board.dart';
 import '../lib/logic/game_logic.dart';
 
 void main() {
