@@ -3,6 +3,7 @@ import '../models/board.dart';
 import '../logic/game_logic.dart';
 import '../services/hotseat_manager.dart';
 
+// modifies
 class HotSeatScreen extends StatefulWidget {
   const HotSeatScreen({super.key});
 

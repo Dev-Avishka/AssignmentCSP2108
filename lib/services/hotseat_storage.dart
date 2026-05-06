@@ -1,9 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HotSeatStorage {
-  static const String _p1WinsKey = 'hotseat_p1_wins';
-  static const String _p2WinsKey = 'hotseat_p2_wins';
-  static const String _drawsKey = 'hotseat_draws';
+  static const String _p1WinsKey = 'hotseat_p1_wins'; //player 1
+  static const String _p2WinsKey = 'hotseat_p2_wins'; //player 2
+  static const String _drawsKey = 'hotseat_draws'; // draws
 
   static Future<void> saveScores({
     required int p1Wins,
