@@ -14,7 +14,7 @@ class HotSeatScreen extends StatefulWidget {
 class _HotSeatScreenState extends State<HotSeatScreen>
     with TickerProviderStateMixin {
   late Board board;
-  int currentPlayer = 1; // 1 = Red (Player 1), 2 = Yellow (Player 2)
+  int currentPlayer = 1;
   String status = "Player 1 (Red) Turn";
   bool isGameOver = false;
   String winner = "";

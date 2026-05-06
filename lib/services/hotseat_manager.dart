@@ -36,7 +36,7 @@ class HotSeatManager {
   }
 
   static String getStats() {
-    return "P1: $p1Wins   |   P2: $p2Wins   |   Draws: $draws ";
+    return "P1: $p1Wins   |   P2: $p2Wins   |   Draws: $draws";
   }
 
   static int get totalGames => p1Wins + p2Wins + draws;
