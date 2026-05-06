@@ -32,9 +32,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late Animation<double> _dropAnimation;
 
   double _cellSize = 48.0;
-
   static const double _innerPad = 12.0;
-  static const double _cellMargin = 7.0; // 3.5 each side
+  static const double _cellMargin = 7.0;
 
   @override
   void initState() {
@@ -193,9 +192,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             Text(
               ScoreManager.getStats(),
               style: const TextStyle(
-                  fontSize: 20,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500),
+                fontSize: 20,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
@@ -280,9 +280,21 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         title: Text("Connect 4 - ${widget.difficulty}",
             style: const TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF1E3A8A),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          IconButton(icon: const Icon(Icons.undo), onPressed: undoMove),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: resetGame),
+          // Smart Undo Button
+          IconButton(
+            icon: const Icon(Icons.undo),
+            color: (moveHistory.length >= 2 && !isGameOver)
+                ? Colors.white
+                : Colors.grey[600],
+            onPressed:
+                (moveHistory.length >= 2 && !isGameOver) ? undoMove : null,
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: resetGame,
+          ),
         ],
       ),
       body: Container(
@@ -302,40 +314,39 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    Text(status,
-                        style: const TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
+                    Text(
+                      status,
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-                    Text(ScoreManager.getStats(),
-                        style: const TextStyle(
-                            fontSize: 18, color: Colors.white70)),
+                    Text(
+                      ScoreManager.getStats(),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.white70,
+                      ),
+                    ),
                   ],
                 ),
               ),
 
-              // ── Board ────────────────────────────────────────────────
+              // Board with Animation
               Expanded(
                 child: Center(
                   child: AnimatedBuilder(
                     animation: _dropAnimation,
                     builder: (context, _) {
                       final double cellStep = _cellSize + _cellMargin;
-
-                      // Target Y: vertically centred inside its cell slot
                       final double targetY = _innerPad +
                           (_droppingRow ?? 0) * cellStep +
                           (cellStep - _cellSize) / 2;
-
-                      // Start Y: just above the board
                       final double startY = -(_cellSize + 8);
-
-                      // Interpolated position
                       final double currentY =
                           startY + (targetY - startY) * _dropAnimation.value;
-
-                      // X: horizontally centred inside its column slot
                       final double currentX = _innerPad +
                           (_droppingCol ?? 0) * cellStep +
                           (cellStep - _cellSize) / 2;
@@ -344,10 +355,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         clipBehavior: Clip.none,
                         alignment: Alignment.center,
                         children: [
-                          // ── LAYER 1: Blue back panel ─────────────────
                           _buildBoardBack(),
-
-                          // ── LAYER 2: Falling disc (the sandwich filling)
                           if (_droppingCol != null && _droppingRow != null)
                             Positioned(
                               left: currentX,
@@ -368,13 +376,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                 ),
                               ),
                             ),
-
-                          // ── LAYER 3: Hole mask + settled pieces ───────
-                          // Transparent overlay; white circles act as the
-                          // "wall" that hides everything behind them,
-                          // coloured circles show settled pieces.
-                          // The target cell is left transparent while
-                          // animating so the disc in Layer 2 shows through.
                           _buildBoardFront(),
                         ],
                       );
@@ -383,7 +384,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 ),
               ),
 
-              // Column arrows
+              // Column Arrows
               Padding(
                 padding: const EdgeInsets.only(bottom: 24, top: 8),
                 child: Row(
@@ -394,8 +395,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       child: SizedBox(
                         width: _cellSize + _cellMargin,
                         height: 40,
-                        child: const Icon(Icons.arrow_drop_down,
-                            color: Colors.white, size: 36),
+                        child: const Icon(
+                          Icons.arrow_drop_down,
+                          color: Colors.white,
+                          size: 36,
+                        ),
                       ),
                     );
                   }),
@@ -408,8 +412,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
 
-  // ── Layer 1 ──────────────────────────────────────────────────────────────
-  // Solid blue rounded rectangle — the back wall of the board.
   Widget _buildBoardBack() {
     final double cellStep = _cellSize + _cellMargin;
     final double boardW = _innerPad * 2 + Board.cols * cellStep;
@@ -429,13 +431,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
 
-  // ── Layer 3 ──────────────────────────────────────────────────────────────
-  // Sits on top of both the back panel and the falling disc.
-  // Each circle is:
-  //   • transparent  → the animating target cell; disc in Layer 2 shows through
-  //   • piece colour → a settled piece
-  //   • white        → an empty hole; hides the blue back panel so it looks
-  //                    like a real hole (white = your app's bg colour)
   Widget _buildBoardFront() {
     return Container(
       padding: const EdgeInsets.all(_innerPad),
@@ -450,10 +445,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               final int cellValue = board.grid[row][col];
 
               final Color fillColor = isTarget
-                  ? Colors.transparent // let disc show through
+                  ? Colors.transparent
                   : cellValue != 0
-                      ? _getPieceColor(cellValue) // settled piece
-                      : Colors.white; // empty hole mask
+                      ? _getPieceColor(cellValue)
+                      : Colors.white;
 
               return GestureDetector(
                 onTap: () => makeMove(col),

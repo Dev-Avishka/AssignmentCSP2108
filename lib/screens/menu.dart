@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'menu2.dart';
+import 'how_to_play.dart';
+import 'HotSeatScreen.dart'; // New file
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
@@ -13,8 +15,8 @@ class MenuScreen extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF1E3A8A), // Deep Blue
-              Color(0xFF3B82F6), // Bright Blue
+              Color(0xFF1E3A8A),
+              Color(0xFF3B82F6),
               Color(0xFF60A5FA),
             ],
           ),
@@ -24,7 +26,6 @@ class MenuScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Game Title
                 const Text(
                   "Connect 4",
                   style: TextStyle(
@@ -33,17 +34,15 @@ class MenuScreen extends StatelessWidget {
                     color: Colors.white,
                     shadows: [
                       Shadow(
-                        blurRadius: 10,
-                        color: Colors.black45,
-                        offset: Offset(3, 3),
-                      ),
+                          blurRadius: 10,
+                          color: Colors.black45,
+                          offset: Offset(3, 3)),
                     ],
                   ),
                 ),
 
                 const SizedBox(height: 12),
 
-                // Subtitle with your name & ID
                 const Text(
                   "Devdisa Dissanayake - 10705279",
                   style: TextStyle(
@@ -53,33 +52,80 @@ class MenuScreen extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 80),
+                const SizedBox(height: 60),
 
-                // Start Button
+                // Play Game Button
                 ElevatedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const Menu2Screen(),
-                      ),
+                          builder: (context) => const Menu2Screen()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: const Color(0xFF1E3A8A),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 60,
-                      vertical: 18,
-                    ),
+                        horizontal: 60, vertical: 18),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
+                        borderRadius: BorderRadius.circular(30)),
                     elevation: 8,
                   ),
                   child: const Text(
                     "PLAY GAME",
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const HotSeatScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF1E3A8A),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 70, vertical: 18),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30)),
+                    elevation: 8,
+                  ),
+                  child: const Text(
+                    "HOT SEAT",
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Learn Button
+                OutlinedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const HowToPlayScreen()),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.white, width: 2),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 50, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30)),
+                  ),
+                  child: const Text(
+                    "HOW TO PLAY",
+                    style: TextStyle(
+                        fontSize: 22,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
