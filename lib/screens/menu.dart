@@ -44,7 +44,7 @@ class MenuScreen extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 const Text(
-                  "Devdisa Dissanayake - 10705279",
+                  "Dev Avishka",
                   style: TextStyle(
                     fontSize: 20,
                     color: Colors.white70,
