@@ -262,6 +262,7 @@ class _HotSeatScreenState extends State<HotSeatScreen>
           style: TextStyle(color: Color(0xFFFFFFFF)),
         ),
         backgroundColor: const Color(0xFF1E3A8A),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
